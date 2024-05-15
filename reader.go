@@ -57,6 +57,10 @@ func (r *Reader) BBox() Box {
 	return r.bbox
 }
 
+func (r *Reader) ShapeType() ShapeType {
+	return r.GeometryType
+}
+
 // Read and parse headers in the Shapefile. This will
 // fill out GeometryType, filelength and bbox.
 func (r *Reader) readHeaders() error {

@@ -135,6 +135,10 @@ func (zr *ZipReader) Shape() (int, Shape) {
 	return zr.sr.Shape()
 }
 
+func (zr *ZipReader) ShapeType() ShapeType {
+	return zr.sr.ShapeType()
+}
+
 // Attribute returns the n-th field of the last row that was read. If there
 // were any errors before, the empty string is returned.
 func (zr *ZipReader) Attribute(n int) string {

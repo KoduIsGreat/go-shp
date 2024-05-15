@@ -4,7 +4,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"math"
 	"strings"
 )
@@ -22,6 +21,7 @@ type SequentialReader interface {
 	// Shape returns the index and the last read shape. If the SequentialReader
 	// encountered any errors, nil is returned for the Shape.
 	Shape() (int, Shape)
+	ShapeType() ShapeType
 
 	// Attribute returns the value of the n-th attribute in the current row. If
 	// the SequentialReader encountered any errors, the empty string is
@@ -81,17 +81,17 @@ func (sr *seqReader) readHeaders() {
 
 	er := &errReader{Reader: sr.shp}
 	// shp headers
-	io.CopyN(ioutil.Discard, er, 24)
+	io.CopyN(io.Discard, er, 24)
 	var l int32
 	binary.Read(er, binary.BigEndian, &l)
 	sr.filelength = int64(l) * 2
-	io.CopyN(ioutil.Discard, er, 4)
+	io.CopyN(io.Discard, er, 4)
 	binary.Read(er, binary.LittleEndian, &sr.geometryType)
 	sr.bbox.MinX = readFloat64(er)
 	sr.bbox.MinY = readFloat64(er)
 	sr.bbox.MaxX = readFloat64(er)
 	sr.bbox.MaxY = readFloat64(er)
-	io.CopyN(ioutil.Discard, er, 32) // skip four float64: Zmin, Zmax, Mmin, Max
+	io.CopyN(io.Discard, er, 32) // skip four float64: Zmin, Zmax, Mmin, Max
 	if er.e != nil {
 		sr.err = fmt.Errorf("Error when reading SHP header: %v", er.e)
 		return
@@ -102,11 +102,11 @@ func (sr *seqReader) readHeaders() {
 	if sr.dbf == nil {
 		return
 	}
-	io.CopyN(ioutil.Discard, er, 4)
+	io.CopyN(io.Discard, er, 4)
 	binary.Read(er, binary.LittleEndian, &sr.dbfNumRecords)
 	binary.Read(er, binary.LittleEndian, &sr.dbfHeaderLength)
 	binary.Read(er, binary.LittleEndian, &sr.dbfRecordLength)
-	io.CopyN(ioutil.Discard, er, 20) // skip padding
+	io.CopyN(io.Discard, er, 20) // skip padding
 	numFields := int(math.Floor(float64(sr.dbfHeaderLength-33) / 32.0))
 	sr.dbfFields = make([]Field, numFields)
 	binary.Read(er, binary.LittleEndian, &sr.dbfFields)
@@ -164,7 +164,7 @@ func (sr *seqReader) Next() bool {
 		return false
 	}
 	skipBytes := int64(size)*2 + 8 - er.n
-	_, ce := io.CopyN(ioutil.Discard, er, skipBytes)
+	_, ce := io.CopyN(io.Discard, er, skipBytes)
 	if er.e != nil {
 		sr.err = er.e
 		return false
@@ -186,6 +186,11 @@ func (sr *seqReader) Next() bool {
 // Shape implements a method of interface SequentialReader for seqReader.
 func (sr *seqReader) Shape() (int, Shape) {
 	return int(sr.num) - 1, sr.shape
+}
+
+// ShapeType implements a method of interface SequentialReader for seqReader.
+func (sr *seqReader) ShapeType() ShapeType {
+	return sr.geometryType
 }
 
 // Attribute implements a method of interface SequentialReader for seqReader.
