@@ -1,3 +1,3 @@
-module github.com/karnott/go-shp
+module github.com/KoduIsGreat/go-shp
 
-go 1.20
+go 1.22
