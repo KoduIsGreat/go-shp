@@ -21,6 +21,7 @@ type SequentialReader interface {
 	// Shape returns the index and the last read shape. If the SequentialReader
 	// encountered any errors, nil is returned for the Shape.
 	Shape() (int, Shape)
+	// ShapeType returns the ShapeType of the file.
 	ShapeType() ShapeType
 
 	// Attribute returns the value of the n-th attribute in the current row. If
